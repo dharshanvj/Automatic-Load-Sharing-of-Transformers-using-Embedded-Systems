@@ -1,0 +1,66 @@
+02.21 8:46 AM
+#include <Wire.h>
+#define RELAY1_PIN  8
+#define RELAY2_PIN  9
+
+#define CURRENT_SENSOR1_PIN A0
+#define CURRENT_SENSOR2_PIN A1
+
+#define THRESHOLD 5.0
+
+
+float readCurrentSensor(int pin) {
+  int sensorValue = analogRead(pin);
+  float voltage = (sensorValue / 1023.0) * 5.0; 
+  float current = (voltage - 2.5) * 30.0; // Assuming ACS712 (30A range, 2.5V at 0A)
+  return current;
+}
+void loadSharing(float current1, float current2) {
+  if (current1 > current2) {
+    if (current1 > THRESHOLD) {
+      digitalWrite(RELAY1_PIN, HIGH); 
+      digitalWrite(RELAY2_PIN, LOW); 
+    } 
+   else
+  {
+      digitalWrite(RELAY1_PIN, LOW); 
+      digitalWrite(RELAY2_PIN, HIGH);  
+    }
+  } else {
+    if (current2 > THRESHOLD) {
+      digitalWrite(RELAY2_PIN, HIGH);  
+      digitalWrite(RELAY1_PIN, LOW);   
+    } else {
+      digitalWrite(RELAY1_PIN, HIGH);  
+      digitalWrite(RELAY2_PIN, LOW);  
+    }
+  }
+}
+
+void setup() {
+  
+  Serial.begin(9600);
+  
+  
+  pinMode(RELAY1_PIN, OUTPUT);
+  pinMode(RELAY2_PIN, OUTPUT);
+  
+  
+  digitalWrite(RELAY1_PIN, LOW);
+  digitalWrite(RELAY2_PIN, LOW);
+}
+
+void loop() {
+  
+ float current1 = readCurrentSensor(CURRENT_SENSOR1_PIN);
+ float current2 = readCurrentSensor(CURRENT_SENSOR2_PIN);
+  Serial.print("Current Transformer 1: ");
+  Serial.print(current1);
+  Serial.print(" A, Current Transformer 2: ");
+  Serial.println(current2);
+  
+  loadSharing(current1, current2);
+
+  delay(1000);
+}
+
